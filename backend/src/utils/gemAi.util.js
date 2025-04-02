@@ -10,97 +10,104 @@ const gemAi = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const structuredOutputTemplate = {
   responseMimeType: "application/json",
   responseSchema: {
-    type: Type.ARRAY,
+    type: "array",
     items: {
-      type: Type.OBJECT,
+      type: "object",
       properties: {
         recipeImage: {
-          type: Type.STRING,
+          type: "string",
           description: "URL of the recipe image",
         },
         recipeVideoUrl: {
-          type: Type.STRING,
+          type: "string",
           description: "URL of the recipe video",
         },
         title: {
-          type: Type.STRING,
+          type: "string",
           description: "Title of the recipe",
           nullable: false,
         },
         description: {
-          type: Type.STRING,
+          type: "string",
           description: "Description of the recipe",
         },
         ratings: {
-          type: Type.NUMBER,
+          type: "number",
           description: "Rating of the recipe (0-5)",
           nullable: false,
         },
         mealType: {
-          type: Type.STRING,
+          type: "string",
           description: "Type of meal (e.g., dessert)",
         },
         cookTime: {
-          type: Type.NUMBER,
+          type: "number",
           description: "Cook time in minutes",
           nullable: false,
         },
         difficultLevel: {
-          type: Type.STRING,
+          type: "string",
           description: "Difficulty level (Easy, Medium, Hard)",
         },
         ingredients: {
-          type: Type.ARRAY,
+          type: "array",
           items: {
-            type: Type.OBJECT,
+            type: "object",
             properties: {
-              ingredientName: { type: Type.STRING },
-              quantity: { type: Type.STRING },
-              ingredientImage: { type: Type.STRING },
+              ingredientName: { type: "string" },
+              quantity: { type: "string" },
+              ingredientImage: { type: "string" },
             },
           },
-          nullable: false,
         },
         nutritions: {
-          type: Type.OBJECT,
+          type: "object",
           properties: {
-            energy: { type: Type.NUMBER },
-            carbs: { type: Type.NUMBER },
-            sugars: { type: Type.NUMBER },
-            dietaryFiber: { type: Type.NUMBER },
-            proteins: { type: Type.NUMBER },
-            fats: { type: Type.NUMBER },
-            saturatedFat: { type: Type.NUMBER },
-            transFat: { type: Type.NUMBER },
-            unsaturatedFat: { type: Type.NUMBER },
-            cholesterol: { type: Type.NUMBER },
-            sodium: { type: Type.NUMBER },
-            potassium: { type: Type.NUMBER },
-            calcium: { type: Type.NUMBER },
-            iron: { type: Type.NUMBER },
-            servingSize: { type: Type.NUMBER, nullable: false },
+            energy: { type: "number" },
+            carbs: { type: "number" },
+            sugars: { type: "number" },
+            dietaryFiber: { type: "number" },
+            proteins: { type: "number" },
+            fats: { type: "number" },
+            saturatedFat: { type: "number" },
+            transFat: { type: "number" },
+            unsaturatedFat: { type: "number" },
+            cholesterol: { type: "number" },
+            sodium: { type: "number" },
+            potassium: { type: "number" },
+            calcium: { type: "number" },
+            iron: { type: "number" },
+            servingSize: { type: "number", nullable: false },
             vitamins: {
-              type: Type.ARRAY,
+              type: "array",
               items: {
-                type: Type.OBJECT,
+                type: "object",
                 properties: {
-                  vitaminName: { type: Type.STRING },
-                  vitaminQuantity: { type: Type.STRING },
+                  vitaminName: { type: "string" },
+                  vitaminQuantity: { type: "string" },
                 },
               },
             },
           },
         },
         steps: {
-          type: Type.ARRAY,
+          type: "array",
           items: {
-            type: Type.OBJECT,
+            type: "object",
             properties: {
-              stepNumber: { type: Type.NUMBER, nullable: false },
-              stepContent: { type: Type.STRING, nullable: false },
+              stepNumber: { type: "number", nullable: false },
+              stepContent: { type: "string", nullable: false },
             },
           },
           nullable: false,
+        },
+        tags: {
+          type: "array",
+          items: {
+            type: "string",
+            description:
+              "Tags associated with the recipe (e.g., gluten-free, keto, paleo, vegan)",
+          },
         },
       },
       required: [
@@ -115,6 +122,26 @@ const structuredOutputTemplate = {
   },
 };
 
+const parseApiResponse = (response) => {
+  if (
+    !response.candidates ||
+    response.candidates.length === 0 ||
+    !response.candidates[0].content.parts ||
+    response.candidates[0].content.parts.length === 0
+  ) {
+    throw new Error("Invalid API Response: Missing candidates or parts");
+  }
+
+  const rawResponse = response.candidates[0].content.parts[0].text;
+  // console.log("Raw API Response:", rawResponse);
+
+  try {
+    return JSON.parse(rawResponse);
+  } catch (error) {
+    throw new Error("Invalid JSON in API Response");
+  }
+};
+
 export const aiFetchRecipes = async () => {
   try {
     const response = await gemAi.models.generateContent({
@@ -123,12 +150,10 @@ export const aiFetchRecipes = async () => {
         "Provide 1 popular cookie recipe with all recipe, ingredient and nutrition details in JSON format.",
       config: structuredOutputTemplate,
     });
-    const recipes = response.candidates[0].content.parts[0].text;
-    // console.log(recipes);
-    return JSON.parse(recipes);
+    return parseApiResponse(response);
   } catch (error) {
     console.error("Error fetching recipes:", error);
-    return null;
+    throw error;
   }
 };
 
@@ -139,11 +164,23 @@ export const aiFetchRecipesByIngredient = async (ingredient) => {
       contents: `Provide 1 popular healthy recipes that include "${ingredient}" as an ingredient, with all recipe, ingredient, and nutrition details in JSON format.`,
       config: structuredOutputTemplate,
     });
-
-    const recipes = response.candidates[0].content.parts[0].text;
-    return JSON.parse(recipes);
+    return parseApiResponse(response);
   } catch (error) {
     console.error("Error fetching recipes by ingredient:", error);
-    return null;
+    throw error;
+  }
+};
+
+export const aiFetchRecipesByDiet = async (diet) => {
+  try {
+    const response = await gemAi.models.generateContent({
+      model: "gemini-1.5-pro",
+      contents: `Provide 1 popular healthy recipes that fit the "${diet}" dietary restriction, with all recipe, ingredient, and nutrition details in JSON format.`,
+      config: structuredOutputTemplate,
+    });
+    return parseApiResponse(response);
+  } catch (error) {
+    console.error("Error fetching recipes by diet:", error);
+    throw error;
   }
 };
