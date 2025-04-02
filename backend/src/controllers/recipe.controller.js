@@ -1,5 +1,8 @@
 import { ApiResponse } from "../utils/apiResponse.util.js";
-import { aiFetchRecipes, aiFetchRecipesByIngredient } from "../utils/gemAi.util.js";
+import {
+  aiFetchRecipes,
+  aiFetchRecipesByIngredient,
+} from "../utils/gemAi.util.js";
 import asyncHandler from "../utils/asyncHandler.util.js";
 import { ApiError } from "../utils/apiError.util.js";
 
