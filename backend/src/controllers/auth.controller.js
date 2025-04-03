@@ -19,9 +19,14 @@ export const loginUser = asyncHandler(async (req, res) => {
   }
 
   // check password correct
-  const isPasswordCorrect = user.isPasswordCorrect(password);
+  const isPasswordCorrect = await user.isPasswordCorrect(password);
   if (!isPasswordCorrect) {
     throw new ApiError(400, { message: "Invalid password!" });
+  }
+
+  // check if user is verified
+  if (!user.isVerified) {
+    throw new ApiError(401, { message: "Email not verified." });
   }
 
   // generate access and refresh tokens
@@ -43,7 +48,7 @@ export const loginUser = asyncHandler(async (req, res) => {
   res
     .cookie("accessToken", accessToken, cookieOptions)
     .cookie("refreshToken", refreshToken, cookieOptions)
-    .status(201)
+    .status(200)
     .json(new ApiResponse(200, { message: "User logged in successfully!" }));
 });
 
