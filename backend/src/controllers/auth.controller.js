@@ -12,3 +12,15 @@ export const loginUser = asyncHandler((req, res) => {
       ),
     );
 });
+
+export const registerUser = asyncHandler((req, res) => {
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { message: "User registered successfully!" },
+        req.body,
+      ),
+    );
+});
