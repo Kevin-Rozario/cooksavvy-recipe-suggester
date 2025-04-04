@@ -145,7 +145,7 @@ const parseApiResponse = (response) => {
 export const aiFetchRecipes = async () => {
   try {
     const response = await gemAi.models.generateContent({
-      model: "gemini-1.5-pro",
+      model: "gemini-2.0-flash",
       contents:
         "Provide 1 popular cookie recipe with all recipe, ingredient and nutrition details in JSON format.",
       config: structuredOutputTemplate,
