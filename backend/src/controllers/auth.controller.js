@@ -3,6 +3,7 @@ import { ApiError } from "../utils/apiError.util.js";
 import asyncHandler from "../utils/asyncHandler.util.js";
 import { User } from "../models/user.model.js";
 import { sendEmail } from "../utils/sendEmail.js";
+import { hashOtp } from "../utils/otpHash.util.js";
 
 export const loginUser = asyncHandler(async (req, res) => {
   const { identifier, password } = req.body;
@@ -103,4 +104,35 @@ export const registerUser = asyncHandler(async (req, res) => {
         createdUser,
       ),
     );
+});
+
+export const verifyUser = asyncHandler(async (req, res) => {
+  // get the otp from params
+  const { otp } = req.body;
+  if (!otp) {
+    throw new ApiError(400, { message: "OTP not found!" });
+  }
+  const hashedOtp = hashOtp(otp);
+
+  // find user based on otp
+  const user = await User.findOne({ otp: hashedOtp });
+  if (!user) {
+    throw new ApiError(404, { message: "Invalid OTP" });
+  }
+
+  if (Date.now() > user.otpExpiry) {
+    user.otp = undefined;
+    user.otpExpiry = undefined;
+    await user.save();
+    throw new ApiError(400, { message: "OTP has expired!" });
+  }
+
+  user.isVerified = true;
+  user.otp = undefined;
+  user.otpExpiry = undefined;
+  await user.save();
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, { message: "User verified successfully!" }, user));
 });
