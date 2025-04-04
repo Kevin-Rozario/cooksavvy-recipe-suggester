@@ -13,7 +13,7 @@ export const loginUser = asyncHandler(async (req, res) => {
   }
 
   // check if user exists
-  const user = await User.find({ email });
+  const user = await User.findOne({ email });
   if (!user) {
     throw new ApiError(400, { message: "User doesn't exists!" });
   }
@@ -52,14 +52,44 @@ export const loginUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, { message: "User logged in successfully!" }));
 });
 
-export const registerUser = asyncHandler((req, res) => {
+export const registerUser = asyncHandler(async (req, res) => {
+  // get data
+  const { email, userName, fullName, password, dietPreferences, allergies } =
+    req.body;
+
+  // validate data
+  if (!email || !userName || !fullName || !password) {
+    throw new ApiError(400, { message: "All fields are required!" });
+  }
+
+  // create the user
+  const createdUser = await User.create({
+    email,
+    userName,
+    fullName,
+    password,
+    dietPreferences,
+    allergies,
+  });
+
+  if (!createdUser) {
+    throw new ApiError(500, { message: "Failed to register user" });
+  }
+
+  // get the email token
+  const { token, hashedToken, tokenExpiry } =
+    await createdUser.generateTemporaryToken();
+
+  // send email to user
+
+  // send response
   res
-    .status(200)
+    .status(201)
     .json(
       new ApiResponse(
-        200,
+        201,
         { message: "User registered successfully!" },
-        req.body,
+        createdUser,
       ),
     );
 });
