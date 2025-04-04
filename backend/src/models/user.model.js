@@ -120,15 +120,16 @@ userSchema.methods.generateRefreshToken = function () {
   );
 };
 
-userSchema.methods.generateTemporaryToken = function () {
-  const unhashedToken = crypto.randomBytes(32).toString("hex");
-  const hashedToken = crypto
+userSchema.methods.generateTemporaryOtp = function () {
+  const unhashedOtp = Math.floor(100000 + Math.random() * 900000);
+  console.log(unhashedOtp);
+  const hashedOtp = crypto
     .createHash("sha256")
-    .update(unhashedToken)
+    .update(unhashedOtp)
     .digest("hex");
-  const tokenExpiry = Date.now() + 20 * 60 * 1000; // 20 mins
+  const otpExpiry = Date.now() + 10 * 60 * 1000; // 10 mins
 
-  return { unhashedToken, hashedToken, tokenExpiry };
+  return { unhashedOtp, hashedOtp, otpExpiry };
 };
 
 const User = mongoose.model("User", userSchema);

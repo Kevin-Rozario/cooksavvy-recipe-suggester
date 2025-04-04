@@ -77,8 +77,8 @@ export const registerUser = asyncHandler(async (req, res) => {
   }
 
   // get the email token
-  const { token, hashedToken, tokenExpiry } =
-    await createdUser.generateTemporaryToken();
+  const { otp, hashedOtp, otpExpiry } =
+    await createdUser.generateTemporaryOtp();
 
   // send email to user
 

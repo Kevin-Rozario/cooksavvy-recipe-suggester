@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verify Your Email Address</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f0f8f0; /* Light green background */
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+      .container {
+        background-color: #fff;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        max-width: 600px;
+        width: 90%;
+      }
+      h1 {
+        color: #2e7d32; /* Dark green heading */
+        margin-bottom: 20px;
+      }
+      p {
+        color: #43a047; /* Medium green text */
+        line-height: 1.6;
+        margin-bottom: 30px;
+      }
+      .otp-container {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      .otp-block {
+        background-color: #e8f5e9; /* Lightest green block */
+        color: #1b5e20; /* Darkest green text */
+        font-size: 24px;
+        font-weight: bold;
+        padding: 15px 20px;
+        border-radius: 8px;
+        min-width: 40px;
+        text-align: center;
+        user-select: all; /* Allow text selection for easy copying */
+      }
+      .copy-button {
+        background-color: #4caf50; /* Green copy button */
+        color: #fff;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        transition: background-color 0.3s ease;
+        margin-top: 20px;
+      }
+      .copy-button:hover {
+        background-color: #388e3c; /* Darker green on hover */
+      }
+      .footer {
+        margin-top: 40px;
+        color: #66bb6a; /* Light green footer text */
+        font-size: 0.9em;
+      }
+      #copy-message {
+        color: #1b5e20;
+        margin-top: 10px;
+        font-size: 0.9em;
+        display: none; /* Initially hidden */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🌿 Email Verification</h1>
+      <p>
+        Please enter the following One-Time Password (OTP) to verify your email
+        address:
+      </p>
+      <div class="otp-container">
+        <div class="otp-block" id="otp-part-1">X</div>
+        <div class="otp-block" id="otp-part-2">X</div>
+        <div class="otp-block" id="otp-part-3">X</div>
+        <div class="otp-block" id="otp-part-4">X</div>
+        <div class="otp-block" id="otp-part-5">X</div>
+        <div class="otp-block" id="otp-part-6">X</div>
+      </div>
+      <button class="copy-button" onclick="copyOTP()">Copy OTP</button>
+      <p id="copy-message">OTP Copied!</p>
+      <p class="footer">This OTP is valid for a limited time.</p>
+      <p class="footer">
+        If you didn't request this verification, you can safely ignore this
+        email.
+      </p>
+      <p class="footer">&copy; [Your Company Name] - All Rights Reserved</p>
+    </div>
+
+    <script>
+      function copyOTP() {
+        const otpBlocks = document.querySelectorAll(".otp-block");
+        let otp = "";
+        otpBlocks.forEach((block) => {
+          otp += block.textContent;
+        });
+
+        const tempInput = document.createElement("input");
+        tempInput.value = otp;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand("copy");
+        document.body.removeChild(tempInput);
+
+        const copyMessage = document.getElementById("copy-message");
+        copyMessage.style.display = "block";
+        setTimeout(() => {
+          copyMessage.style.display = "none";
+        }, 2000); // Hide message after 2 seconds
+      }
+
+      export function setOTP(otpString) {
+        if (otpString.length === 6) {
+          document.getElementById("otp-part-1").textContent = otpString[0];
+          document.getElementById("otp-part-2").textContent = otpString[1];
+          document.getElementById("otp-part-3").textContent = otpString[2];
+          document.getElementById("otp-part-4").textContent = otpString[3];
+          document.getElementById("otp-part-5").textContent = otpString[4];
+          document.getElementById("otp-part-6").textContent = otpString[5];
+        } else {
+          console.error("Invalid OTP length");
+        }
+      }
+    </script>
+  </body>
+</html>
