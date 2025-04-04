@@ -5,7 +5,12 @@ import path from "path";
 const sendEmail = async (user, otp) => {
   const otpDigits = otp.split("");
 
-  const emailTemplatePath = path.join(__dirname, "emailTemplate.html");
+  const emailTemplatePath = path.join(
+    process.cwd(),
+    "public",
+    "templates",
+    "emailTemplate.html",
+  );
   console.log(emailTemplatePath);
 
   try {

@@ -38,6 +38,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
+      select: false,
     },
     isEmailVerified: {
       type: Boolean,
@@ -73,11 +74,11 @@ const userSchema = new mongoose.Schema(
     forgotPasswordExpiry: {
       type: Date,
     },
-    emailVerificationToken: {
+    otp: {
       type: String,
       default: undefined,
     },
-    emailVerificationTokenExpiry: {
+    otpExpiry: {
       type: Date,
     },
   },
