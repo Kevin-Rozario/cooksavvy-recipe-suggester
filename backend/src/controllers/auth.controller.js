@@ -2,6 +2,7 @@ import { ApiResponse } from "../utils/apiResponse.util.js";
 import { ApiError } from "../utils/apiError.util.js";
 import asyncHandler from "../utils/asyncHandler.util.js";
 import { User } from "../models/user.model.js";
+import { sendEmail } from "../utils/sendEmail.js";
 
 export const loginUser = asyncHandler(async (req, res) => {
   // get data from request
@@ -81,6 +82,10 @@ export const registerUser = asyncHandler(async (req, res) => {
     await createdUser.generateTemporaryOtp();
 
   // send email to user
+  const emailStatus = await sendEmail(createdUser, otp);
+  if (!emailStatus) {
+    throw new ApiError(500, { message: "Failed to send verification email." });
+  }
 
   // send response
   res

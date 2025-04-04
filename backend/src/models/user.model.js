@@ -121,7 +121,7 @@ userSchema.methods.generateRefreshToken = function () {
 };
 
 userSchema.methods.generateTemporaryOtp = function () {
-  const unhashedOtp = Math.floor(100000 + Math.random() * 900000);
+  const unhashedOtp = Math.random().toString(36).substring(2, 8).toUpperCase();
   console.log(unhashedOtp);
   const hashedOtp = crypto
     .createHash("sha256")
