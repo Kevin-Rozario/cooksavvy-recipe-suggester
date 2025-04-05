@@ -11,7 +11,6 @@ const sendEmail = async (user, otp) => {
     "templates",
     "emailTemplate.html",
   );
-  console.log(emailTemplatePath);
 
   try {
     const emailTemplate = await fs.readFile(emailTemplatePath, "utf-8");

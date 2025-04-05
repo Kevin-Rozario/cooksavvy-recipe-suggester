@@ -11,7 +11,7 @@ import { registerSchema } from "../validators/register.validator.js";
 const router = Router();
 
 router.route("/login").post(validate(loginSchema), loginUser);
-router.route("/register").post(validate(registerSchema), registerUser);
+router.route("/register").post( registerUser);
 router.route("/verify").post(verifyUser);
 
 export default router;

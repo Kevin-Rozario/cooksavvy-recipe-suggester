@@ -81,14 +81,14 @@ export const registerUser = asyncHandler(async (req, res) => {
   }
 
   // generate the otp
-  const { otp, hashedOtp, otpExpiry } =
+  const { unhashedOtp, hashedOtp, otpExpiry } =
     await createdUser.generateTemporaryOtp();
   createdUser.otp = hashedOtp;
   createdUser.otpExpiry = otpExpiry;
   await createdUser.save();
 
   // send email to user
-  const emailStatus = await sendEmail(createdUser, otp);
+  const emailStatus = await sendEmail(createdUser, unhashedOtp);
   if (!emailStatus) {
     console.error("Failed to send verification email", emailStatus);
     throw new ApiError(500, { message: "Failed to send verification email." });

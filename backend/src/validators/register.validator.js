@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { allergiesList, dietList } from "../utils/constants.js";
+// import { allergiesList, dietList } from "../utils/constants.js";
 
 const registerSchema = z.object({
   userName: z
@@ -35,8 +35,8 @@ const registerSchema = z.object({
           "Password must contain uppercase, lowercase, numbers, and symbols",
       },
     ),
-  dietPreferences: z.enum(dietList),
-  allergies: z.enum(allergiesList),
+  // dietPreferences: z.enum(dietList).optional(),
+  // allergies: z.enum(allergiesList).optional(),
 });
 
 export { registerSchema };

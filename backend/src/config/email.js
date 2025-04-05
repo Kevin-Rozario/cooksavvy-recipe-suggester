@@ -5,7 +5,7 @@ const transporter = nodemailer.createTransport({
   port: process.env.MAILTRAP_PORT,
   secure: false,
   auth: {
-    user: process.env.MAILTRAP_USERNANE,
+    user: process.env.MAILTRAP_USERNAME,
     pass: process.env.MAILTRAP_PASSWORD,
   },
 });
