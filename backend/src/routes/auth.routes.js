@@ -11,6 +11,7 @@ import {
   verifyUser,
 } from "../controllers/auth.controller.js";
 import { authMiddlware } from "../middlewares/auth.middleware.js";
+import { uploadProfileImage } from "../middlewares/multer.middleware.js";
 
 const router = Router();
 
@@ -18,7 +19,10 @@ router.route("/login").post(loginUser);
 router.route("/register").post(registerUser);
 router.route("/verify").post(verifyUser);
 router.route("/refresh-token").get(renewRefreshToken);
-router.route("/profile").get(authMiddlware, getProfile);
+router
+  .route("/profile")
+  .get(authMiddlware, getProfile)
+  .post(authMiddlware, uploadProfileImage, getProfile);
 router.route("/logout").get(authMiddlware, logoutUser);
 
 export default router;
