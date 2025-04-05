@@ -10,8 +10,8 @@ import { registerSchema } from "../validators/register.validator.js";
 
 const router = Router();
 
-router.route("/login").post(validate(loginSchema), loginUser);
-router.route("/register").post( registerUser);
+router.route("/login").post(loginUser);
+router.route("/register").post(registerUser);
 router.route("/verify").post(verifyUser);
 
 export default router;

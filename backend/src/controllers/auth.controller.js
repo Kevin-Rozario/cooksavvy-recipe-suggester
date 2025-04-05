@@ -16,10 +16,10 @@ export const loginUser = asyncHandler(async (req, res) => {
 
   const user = await User.findOne({
     $or: [{ email: identifier }, { userName: identifier }],
-  });
+  }).select("+password");
 
   if (!user) {
-    throw new ApiError(401, { message: "Invalid credentials" }); // More generic message
+    throw new ApiError(401, { message: "Invalid credentials" });
   }
 
   const isPasswordCorrect = await user.isPasswordCorrect(password);
@@ -27,7 +27,7 @@ export const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(401, { message: "Invalid credentials" });
   }
 
-  if (!user.isVerified) {
+  if (!user.isEmailVerified) {
     throw new ApiError(401, { message: "Email not verified." });
   }
 
@@ -59,6 +59,8 @@ export const registerUser = asyncHandler(async (req, res) => {
   if (!email || !userName || !fullName || !password) {
     throw new ApiError(400, { message: "All fields are required!" });
   }
+
+  console.log(`Email: ${email}\n Password: ${password}`); // test purpose
 
   // Check for existing user by email or username
   const existingUser = await User.findOne({ $or: [{ email }, { userName }] });
