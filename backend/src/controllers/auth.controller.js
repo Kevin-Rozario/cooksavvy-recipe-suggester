@@ -1,7 +1,7 @@
 import { ApiResponse } from "../utils/apiResponse.util.js";
 import { ApiError } from "../utils/apiError.util.js";
 import asyncHandler from "../utils/asyncHandler.util.js";
-import { User } from "../models/user.model.js";
+import User from "../models/user.model.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { hashOtp } from "../utils/otpHash.util.js";
 
@@ -134,5 +134,7 @@ export const verifyUser = asyncHandler(async (req, res) => {
 
   res
     .status(200)
-    .json(new ApiResponse(200, { message: "User verified successfully!" }, user));
+    .json(
+      new ApiResponse(200, { message: "User verified successfully!" }, user),
+    );
 });

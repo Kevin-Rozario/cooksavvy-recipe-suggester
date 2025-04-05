@@ -2,7 +2,7 @@ import mongoose, { Schema } from "mongoose";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
-import { AllergiesList, DietList } from "../utils/constants.js";
+import { allergiesList, dietList } from "../utils/constants.js";
 
 const userSchema = new mongoose.Schema(
   {
@@ -46,12 +46,12 @@ const userSchema = new mongoose.Schema(
     },
     dietPreferences: {
       type: [String],
-      enum: DietList,
+      enum: dietList,
       default: undefined,
     },
     allergies: {
       type: [String],
-      enum: AllergiesList,
+      enum: allergiesList,
       default: undefined,
     },
     favouriteRecipes: {
