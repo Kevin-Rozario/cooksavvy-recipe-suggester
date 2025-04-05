@@ -19,7 +19,7 @@ const createUploadMiddleware = (destinationFolder) => {
 
 // For uploading a avatar image
 export const uploadProfileImage =
-  createUploadMiddleware("profiles").single("profilePic");
+  createUploadMiddleware("profiles").single("avatar");
 
 // For uploading a input image
 export const uploadGeneralImage =
