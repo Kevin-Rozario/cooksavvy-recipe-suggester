@@ -74,11 +74,11 @@ const userSchema = new mongoose.Schema(
     forgotPasswordExpiry: {
       type: Date,
     },
-    otp: {
+    emailToken: {
       type: String,
       default: undefined,
     },
-    otpExpiry: {
+    emailTokenExpiry: {
       type: Date,
     },
   },
@@ -121,15 +121,11 @@ userSchema.methods.generateRefreshToken = function () {
   );
 };
 
-userSchema.methods.generateTemporaryOtp = function () {
-  const unhashedOtp = Math.floor(100000 + Math.random() * 900000).toString();
-  const hashedOtp = crypto
-    .createHash("sha256")
-    .update(unhashedOtp)
-    .digest("hex");
-  const otpExpiry = Date.now() + 10 * 60 * 1000; // 10 mins
+userSchema.methods.generateTemporaryToken = function () {
+  const token = crypto.randomBytes(32).toString("hex");
+  const tokenExpiry = Date.now() + 10 * 60 * 1000; // 10 mins
 
-  return { unhashedOtp, hashedOtp, otpExpiry };
+  return { token, tokenExpiry };
 };
 
 const User = mongoose.model("User", userSchema);

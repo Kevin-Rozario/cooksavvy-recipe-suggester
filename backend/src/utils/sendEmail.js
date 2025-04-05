@@ -1,40 +1,82 @@
 import { transporter } from "../config/email.js";
-import fs from "fs/promises";
-import path from "path";
+import Mailgen from "mailgen";
+import { ApiError } from "./apiError.util.js";
 
-const sendEmail = async (user, otp) => {
-  const otpDigits = otp.split("");
+const mailGenerator = new Mailgen({
+  theme: "default",
+  product: {
+    name: "Cooksavvy",
+    link: process.env.APP_URL || "https://cooksavvy.example.com",
+    logo: process.env.APP_LOGO_URL,
+  },
+});
 
-  const emailTemplatePath = path.join(
-    process.cwd(),
-    "public",
-    "templates",
-    "emailTemplate.html",
-  );
-
+export const sendEmail = async (options) => {
   try {
-    const emailTemplate = await fs.readFile(emailTemplatePath, "utf-8");
+    const emailText = mailGenerator.generatePlaintext(options.mailGenContent);
+    const emailHtml = mailGenerator.generate(options.mailGenContent);
 
-    let formattedEmail = emailTemplate;
-    formattedEmail = formattedEmail.replace("{{otp1}}", otpDigits[0] || "");
-    formattedEmail = formattedEmail.replace("{{otp2}}", otpDigits[1] || "");
-    formattedEmail = formattedEmail.replace("{{otp3}}", otpDigits[2] || "");
-    formattedEmail = formattedEmail.replace("{{otp4}}", otpDigits[3] || "");
-    formattedEmail = formattedEmail.replace("{{otp5}}", otpDigits[4] || "");
-    formattedEmail = formattedEmail.replace("{{otp6}}", otpDigits[5] || "");
-
-    const info = await transporter.sendMail({
+    const mailOptions = {
       from: process.env.SENDER_EMAIL_ID,
-      to: user.email,
-      subject: "Verification Email from Cooksavvy.",
-      html: formattedEmail,
-    });
+      to: options.email,
+      subject: options.subject,
+      text: emailText,
+      html: emailHtml,
+    };
 
-    return info.messageId;
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Email sent:", info.messageId);
+    return info;
   } catch (error) {
     console.error("Error sending email:", error);
-    throw error;
+    throw new ApiError(500, "Failed to send email!");
   }
 };
 
-export { sendEmail };
+export const emailVerificationMailGenContent = ({
+  userName,
+  verificationUrl,
+}) => {
+  return {
+    body: {
+      name: userName,
+      intro: "Welcome to Cooksavvy! We're very excited to have you on board.",
+      action: {
+        instructions:
+          "To get started with Cooksavvy and verify your email address, please click the button below:",
+        button: {
+          color: "#007bff",
+          text: "Verify Your Account",
+          link: verificationUrl,
+        },
+      },
+      outro: [
+        "If you did not create an account, no further action is required.",
+        "Need help, or have questions? Just reply to this email, we'd love to assist you.",
+      ],
+    },
+  };
+};
+
+export const passwordResetMailGenContent = ({ userName, passwordResetUrl }) => {
+  return {
+    body: {
+      name: userName,
+      intro:
+        "You are receiving this email because a password reset request has been initiated for your Cooksavvy account.",
+      action: {
+        instructions: "To reset your password, please click the button below:",
+        button: {
+          color: "#dc3545",
+          text: "Reset Your Password",
+          link: passwordResetUrl,
+        },
+      },
+      outro: [
+        "If you did not request a password reset, please ignore this email. Your password will remain unchanged.",
+        "For security reasons, this password reset link is only valid for a limited time.",
+        "If you continue to have issues, please contact our support team.",
+      ],
+    },
+  };
+};

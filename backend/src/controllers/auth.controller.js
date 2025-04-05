@@ -2,8 +2,10 @@ import { ApiResponse } from "../utils/apiResponse.util.js";
 import { ApiError } from "../utils/apiError.util.js";
 import asyncHandler from "../utils/asyncHandler.util.js";
 import User from "../models/user.model.js";
-import { sendEmail } from "../utils/sendEmail.js";
-import { hashOtp } from "../utils/otpHash.util.js";
+import {
+  emailVerificationMailGenContent,
+  sendEmail,
+} from "../utils/sendEmail.js";
 
 export const loginUser = asyncHandler(async (req, res) => {
   const { identifier, password } = req.body;
@@ -60,7 +62,7 @@ export const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "All fields are required!");
   }
 
-  console.log(`Email: ${email}\n Password: ${password}`); // test purpose
+  console.log(`Email: ${email}\nPassword: ${password}`); // test purpose
 
   // Check for existing user by email or username
   const existingUser = await User.findOne({ $or: [{ email }, { userName }] });
@@ -82,15 +84,23 @@ export const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(500, "Failed to register user");
   }
 
-  // generate the otp
-  const { unhashedOtp, hashedOtp, otpExpiry } =
-    await createdUser.generateTemporaryOtp();
-  createdUser.otp = hashedOtp;
-  createdUser.otpExpiry = otpExpiry;
+  // generate the token
+  const { token, tokenExpiry } = createdUser.generateTemporaryToken();
+  createdUser.emailToken = token;
+  createdUser.emailTokenExpiry = tokenExpiry;
   await createdUser.save();
 
   // send email to user
-  const emailStatus = await sendEmail(createdUser, unhashedOtp);
+  const options = {
+    email: createdUser.email,
+    subject: "Cooksavvy Verification Email",
+    mailGenContent: emailVerificationMailGenContent({
+      userName: createdUser.fullName,
+      verificationUrl: `${process.env.BASE_URL}/api/v1/users/verify?tkey=${token}`,
+    }),
+  };
+
+  const emailStatus = await sendEmail(options);
   if (!emailStatus) {
     console.error("Failed to send verification email", emailStatus);
     throw new ApiError(500, "Failed to send verification email.");
@@ -109,29 +119,28 @@ export const registerUser = asyncHandler(async (req, res) => {
 });
 
 export const verifyUser = asyncHandler(async (req, res) => {
-  // get the otp from params
-  const { otp } = req.body;
-  if (!otp) {
-    throw new ApiError(400, "OTP not found!");
+  // get the token from query
+  const token = req.query.tkey;
+  if (!token) {
+    throw new ApiError(400, "Email verification token not found!");
   }
-  const hashedOtp = hashOtp(otp);
 
   // find user based on otp
-  const user = await User.findOne({ otp: hashedOtp });
+  const user = await User.findOne({ emailToken: token });
   if (!user) {
-    throw new ApiError(404, "Invalid OTP");
+    throw new ApiError(404, "Invalid email verification token!");
   }
 
-  if (Date.now() > user.otpExpiry) {
-    user.otp = undefined;
-    user.otpExpiry = undefined;
+  if (Date.now() > user.emailTokenExpiry) {
+    user.emailToken = undefined;
+    user.emailTokenExpiry = undefined;
     await user.save();
-    throw new ApiError(400, "OTP has expired!");
+    throw new ApiError(400, "Email verification token expired!");
   }
 
   user.isEmailVerified = true;
-  user.otp = undefined;
-  user.otpExpiry = undefined;
+  user.emailToken = undefined;
+  user.emailTokenExpiry = undefined;
   await user.save();
 
   res
@@ -140,3 +149,4 @@ export const verifyUser = asyncHandler(async (req, res) => {
       new ApiResponse(200, { message: "User verified successfully!" }, user),
     );
 });
+
