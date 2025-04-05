@@ -6,6 +6,7 @@ import {
   emailVerificationMailGenContent,
   sendEmail,
 } from "../utils/sendEmail.js";
+import jwt from "jsonwebtoken";
 
 export const loginUser = asyncHandler(async (req, res) => {
   const { identifier, password } = req.body;
@@ -150,3 +151,112 @@ export const verifyUser = asyncHandler(async (req, res) => {
     );
 });
 
+export const logoutUser = asyncHandler(async (req, res) => {
+  // get user id
+  const userId = req.user?.userId;
+
+  // check id
+  if (!userId) {
+    throw new ApiError(401, "Unauthorized: No user found in request!");
+  }
+
+  // fetch user
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(404, "User not found!");
+  }
+
+  // Clear refresh token from the database
+  user.refreshToken = undefined;
+  await user.save();
+
+  // Clear cookies
+  const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "Strict",
+  };
+
+  res.clearCookie("accessToken", cookieOptions);
+  res.clearCookie("refreshToken", cookieOptions);
+
+  // Send response
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "User logged out successfully!", {}));
+});
+
+export const renewRefreshToken = asyncHandler(async (req, res) => {
+  // get refresh token from cookies
+  const { refreshToken } = req.cookies;
+
+  // check for refresh token
+  if (!refreshToken) {
+    throw new ApiError(401, "Refresh token is required!");
+  }
+
+  // decode token retrieve user info
+  try {
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    const userId = decoded?.userId;
+
+    if (!userId) {
+      throw new ApiError(401, "Invalid refresh token!");
+    }
+
+    // fetch user
+    const user = await User.findById(userId);
+    if (!user || user.refreshToken !== refreshToken) {
+      throw new ApiError(401, "Invalid or expired refresh token!");
+    }
+
+    // generate new tokens
+    const newAccessToken = user.generateAccessToken();
+    const newRefreshToken = user.generateRefreshToken();
+
+    // Save new refresh token in DB
+    user.refreshToken = newRefreshToken;
+    await user.save();
+
+    // Cookie options
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "Strict",
+    };
+
+    // Set new tokens in cookies and send response
+    res
+      .cookie("accessToken", newAccessToken, cookieOptions)
+      .cookie("refreshToken", newRefreshToken, cookieOptions)
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { message: "Access token renewed successfully!" },
+          { accessToken: newAccessToken },
+        ),
+      );
+  } catch (error) {
+    console.error("Error during refresh token renewal:", error);
+    throw new ApiError(401, "Invalid refresh token!");
+  }
+});
+
+export const getProfile = asyncHandler(async (req, res) => {
+  const userId = req.user?.userId;
+  if (!userId) {
+    throw new ApiError(401, "Unauthorised request");
+  }
+
+  const foundUser = await User.findOne({ _id: userId }).select(
+    "-_id -password -refreshToken",
+  );
+  if (!foundUser) {
+    throw new ApiError(404, "User not found!");
+  }
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, "User fetched succssfully!", foundUser));
+});
