@@ -9,9 +9,7 @@ export const loginUser = asyncHandler(async (req, res) => {
   const { identifier, password } = req.body;
 
   if (!identifier || !password) {
-    throw new ApiError(400, {
-      message: "Identifier and password are required!",
-    });
+    throw new ApiError(400, "Identifier and password are required!");
   }
 
   const user = await User.findOne({
@@ -19,16 +17,16 @@ export const loginUser = asyncHandler(async (req, res) => {
   }).select("+password");
 
   if (!user) {
-    throw new ApiError(401, { message: "Invalid credentials" });
+    throw new ApiError(401, "Invalid credentials");
   }
 
   const isPasswordCorrect = await user.isPasswordCorrect(password);
   if (!isPasswordCorrect) {
-    throw new ApiError(401, { message: "Invalid credentials" });
+    throw new ApiError(401, "Invalid credentials");
   }
 
   if (!user.isEmailVerified) {
-    throw new ApiError(401, { message: "Email not verified." });
+    throw new ApiError(401, "Email not verified");
   }
 
   const accessToken = user.generateAccessToken();
@@ -47,7 +45,9 @@ export const loginUser = asyncHandler(async (req, res) => {
     .cookie("accessToken", accessToken, cookieOptions)
     .cookie("refreshToken", refreshToken, cookieOptions)
     .status(200)
-    .json(new ApiResponse(200, { message: "User logged in successfully!" }));
+    .json(
+      new ApiResponse(200, { message: "User logged in successfully!" }, user),
+    );
 });
 
 export const registerUser = asyncHandler(async (req, res) => {
@@ -57,7 +57,7 @@ export const registerUser = asyncHandler(async (req, res) => {
 
   // validate data
   if (!email || !userName || !fullName || !password) {
-    throw new ApiError(400, { message: "All fields are required!" });
+    throw new ApiError(400, "All fields are required!");
   }
 
   console.log(`Email: ${email}\n Password: ${password}`); // test purpose
@@ -65,7 +65,7 @@ export const registerUser = asyncHandler(async (req, res) => {
   // Check for existing user by email or username
   const existingUser = await User.findOne({ $or: [{ email }, { userName }] });
   if (existingUser) {
-    throw new ApiError(409, { message: "Email or username already exists" });
+    throw new ApiError(409, "Email or username already exists");
   }
 
   // create the user
@@ -79,7 +79,7 @@ export const registerUser = asyncHandler(async (req, res) => {
   });
 
   if (!createdUser) {
-    throw new ApiError(500, { message: "Failed to register user" });
+    throw new ApiError(500, "Failed to register user");
   }
 
   // generate the otp
@@ -93,7 +93,7 @@ export const registerUser = asyncHandler(async (req, res) => {
   const emailStatus = await sendEmail(createdUser, unhashedOtp);
   if (!emailStatus) {
     console.error("Failed to send verification email", emailStatus);
-    throw new ApiError(500, { message: "Failed to send verification email." });
+    throw new ApiError(500, "Failed to send verification email.");
   }
 
   // send response
@@ -112,24 +112,24 @@ export const verifyUser = asyncHandler(async (req, res) => {
   // get the otp from params
   const { otp } = req.body;
   if (!otp) {
-    throw new ApiError(400, { message: "OTP not found!" });
+    throw new ApiError(400, "OTP not found!");
   }
   const hashedOtp = hashOtp(otp);
 
   // find user based on otp
   const user = await User.findOne({ otp: hashedOtp });
   if (!user) {
-    throw new ApiError(404, { message: "Invalid OTP" });
+    throw new ApiError(404, "Invalid OTP");
   }
 
   if (Date.now() > user.otpExpiry) {
     user.otp = undefined;
     user.otpExpiry = undefined;
     await user.save();
-    throw new ApiError(400, { message: "OTP has expired!" });
+    throw new ApiError(400, "OTP has expired!");
   }
 
-  user.isVerified = true;
+  user.isEmailVerified = true;
   user.otp = undefined;
   user.otpExpiry = undefined;
   await user.save();
