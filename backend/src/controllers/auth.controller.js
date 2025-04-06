@@ -321,6 +321,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
   const token = req.query.tkey;
   const { password } = req.body;
 
+  console.log("Resetted Password: ", password);
   // check if token and password exists
   if (!token || !password) {
     throw new ApiError(400, "Token and new password are required!");

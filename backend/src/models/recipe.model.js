@@ -42,8 +42,7 @@ const recipeSchema = new mongoose.Schema(
             trim: true,
           },
           quatity: {
-            type: String,
-            trim: true,
+            type: Number,
           },
         },
       ],

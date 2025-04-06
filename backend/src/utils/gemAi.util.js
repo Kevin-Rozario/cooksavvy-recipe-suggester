@@ -1,5 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { config } from "dotenv";
+import { ApiError } from "./apiError.util.js";
 
 config({
   path: ".env",
@@ -160,27 +161,27 @@ export const aiFetchRecipes = async () => {
 export const aiFetchRecipesByIngredient = async (ingredient) => {
   try {
     const response = await gemAi.models.generateContent({
-      model: "gemini-1.5-pro",
+      model: "gemini-2.0-flash",
       contents: `Provide 1 popular healthy recipes that include "${ingredient}" as an ingredient, with all recipe, ingredient, and nutrition details in JSON format.`,
       config: structuredOutputTemplate,
     });
     return parseApiResponse(response);
   } catch (error) {
     console.error("Error fetching recipes by ingredient:", error);
-    throw error;
+    throw new ApiError(500, "Error fetching recipes by ingredient");
   }
 };
 
 export const aiFetchRecipesByDiet = async (diet) => {
   try {
     const response = await gemAi.models.generateContent({
-      model: "gemini-1.5-pro",
+      model: "gemini-2.0-flash",
       contents: `Provide 1 popular healthy recipes that fit the "${diet}" dietary restriction, with all recipe, ingredient, and nutrition details in JSON format.`,
       config: structuredOutputTemplate,
     });
     return parseApiResponse(response);
   } catch (error) {
     console.error("Error fetching recipes by diet:", error);
-    throw error;
+    throw new ApiError(500, "Error fetching recipes by diet");
   }
 };

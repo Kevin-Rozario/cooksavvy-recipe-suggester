@@ -163,7 +163,7 @@ export const removeIngredientFromCart = asyncHandler(async (req, res) => {
 
 export const updateCartItemQuantity = asyncHandler(async (req, res) => {
   const { ingredientName } = req.params;
-  const { quantity = 1 } = req.body;
+  const { quantity } = req.body;
   const userId = req.user.userId;
 
   if (
