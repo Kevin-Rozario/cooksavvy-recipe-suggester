@@ -13,7 +13,7 @@ app.use(cookieParser());
 
 // Routes
 app.use("/api/v1/health-check", heatlhCheckRouter);
-app.use("/api/v1/users", authRoutes);
+app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/recipes", recipeRouter);
 
 export default app;

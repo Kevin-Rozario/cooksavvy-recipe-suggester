@@ -4,6 +4,7 @@ import asyncHandler from "../utils/asyncHandler.util.js";
 import User from "../models/user.model.js";
 import {
   emailVerificationMailGenContent,
+  passwordResetMailGenContent,
   sendEmail,
 } from "../utils/sendEmail.js";
 import jwt from "jsonwebtoken";
@@ -259,4 +260,90 @@ export const getProfile = asyncHandler(async (req, res) => {
   res
     .status(200)
     .json(new ApiResponse(200, "User fetched succssfully!", foundUser));
+});
+
+export const requestPasswordReset = asyncHandler(async (req, res) => {
+  // get email from request
+  const { email } = req.body;
+
+  // check if email exists
+  if (!email) {
+    throw new ApiError(400, "Email is required!");
+  }
+
+  // check if user exists
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(200).json(
+      new ApiResponse(200, {
+        message:
+          "If an account with this email exists, a password reset link has been sent.",
+      }),
+    );
+  }
+
+  // generate token
+  const { token, tokenExpiry } = user.generateTemporaryToken();
+  user.forgotPasswordToken = token;
+  user.forgotPasswordTokenExpiry = tokenExpiry;
+  await user.save();
+
+  // mail options
+  const options = {
+    email: user.email,
+    subject: "Cooksavvy Password Reset Email",
+    mailGenContent: passwordResetMailGenContent({
+      userName: user.fullName,
+      verificationUrl: `${process.env.BASE_URL}/api/v1/auth/reset-password?tkey=${token}`,
+    }),
+  };
+
+  // send email
+  const emailStatus = await sendEmail(options);
+  if (!emailStatus) {
+    console.error("Failed to send password reset email", emailStatus);
+    throw new ApiError(500, "Failed to send password reset email.");
+  }
+
+  // send response
+  res.status(200).json(
+    new ApiResponse(200, {
+      message: "Password reset email sent successfully!",
+    }),
+  );
+});
+
+export const forgotPassword = asyncHandler(async (req, res) => {
+  // get token and password from request
+  const { token, password } = req.body;
+
+  // check if token and password exists
+  if (!token || !password) {
+    throw new ApiError(400, "Token and new password are required!");
+  }
+
+  // fetch user
+  const user = await User.findOne({ forgotPasswordToken: token });
+  if (!user) {
+    throw new ApiError(400, "Invalid password reset token.");
+  }
+
+  // check token expiry
+  if (Date.now() > user.forgotPasswordTokenExpiry) {
+    user.forgotPasswordToken = undefined;
+    user.forgotPasswordTokenExpiry = undefined;
+    await user.save();
+    throw new ApiError(400, "Password reset token has expired.");
+  }
+
+  // modify fields
+  user.password = password;
+  user.forgotPasswordToken = undefined;
+  user.forgotPasswordTokenExpiry = undefined;
+  await user.save();
+
+  // send response
+  res
+    .status(200)
+    .json(new ApiResponse(200, { message: "Password reset successfully!" }));
 });

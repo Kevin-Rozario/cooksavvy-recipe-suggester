@@ -24,5 +24,7 @@ router
   .get(authMiddlware, getProfile)
   .post(authMiddlware, uploadProfileImage, getProfile);
 router.route("/logout").get(authMiddlware, logoutUser);
+router.route("/forgot-password").post(authMiddlware, logoutUser);
+router.route("/reset-password").post(authMiddlware, logoutUser);
 
 export default router;
