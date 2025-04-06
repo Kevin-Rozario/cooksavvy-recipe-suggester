@@ -3,11 +3,13 @@ import { validate } from "../middlewares/validate.middleware.js";
 import { loginSchema } from "../validators/login.validator.js";
 import { registerSchema } from "../validators/register.validator.js";
 import {
+  forgotPassword,
   getProfile,
   loginUser,
   logoutUser,
   registerUser,
   renewRefreshToken,
+  resetPassword,
   verifyUser,
 } from "../controllers/auth.controller.js";
 import { authMiddlware } from "../middlewares/auth.middleware.js";
@@ -24,7 +26,7 @@ router
   .get(authMiddlware, getProfile)
   .post(authMiddlware, uploadProfileImage, getProfile);
 router.route("/logout").get(authMiddlware, logoutUser);
-router.route("/forgot-password").post(authMiddlware, logoutUser);
-router.route("/reset-password").post(authMiddlware, logoutUser);
+router.route("/forgot-password").post(forgotPassword);
+router.route("/reset-password").post(resetPassword);
 
 export default router;

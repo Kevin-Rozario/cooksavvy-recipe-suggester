@@ -262,7 +262,7 @@ export const getProfile = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "User fetched succssfully!", foundUser));
 });
 
-export const requestPasswordReset = asyncHandler(async (req, res) => {
+export const forgotPassword = asyncHandler(async (req, res) => {
   // get email from request
   const { email } = req.body;
 
@@ -313,7 +313,7 @@ export const requestPasswordReset = asyncHandler(async (req, res) => {
   );
 });
 
-export const forgotPassword = asyncHandler(async (req, res) => {
+export const resetPassword = asyncHandler(async (req, res) => {
   // get token and password from request
   const { token, password } = req.body;
 
