@@ -294,7 +294,7 @@ export const forgotPassword = asyncHandler(async (req, res) => {
     subject: "Cooksavvy Password Reset Email",
     mailGenContent: passwordResetMailGenContent({
       userName: user.fullName,
-      verificationUrl: `${process.env.BASE_URL}/api/v1/auth/reset-password?tkey=${token}`,
+      passwordResetUrl: `${process.env.BASE_URL}/api/v1/auth/reset-password?tkey=${token}`,
     }),
   };
 
@@ -315,7 +315,8 @@ export const forgotPassword = asyncHandler(async (req, res) => {
 
 export const resetPassword = asyncHandler(async (req, res) => {
   // get token and password from request
-  const { token, password } = req.body;
+  const token = req.query.tkey;
+  const { password } = req.body;
 
   // check if token and password exists
   if (!token || !password) {
@@ -345,5 +346,11 @@ export const resetPassword = asyncHandler(async (req, res) => {
   // send response
   res
     .status(200)
-    .json(new ApiResponse(200, { message: "Password reset successfully!" }));
+    .json(
+      new ApiResponse(
+        200,
+        { message: "Password reset successfully!" },
+        { NewPassword: password },
+      ),
+    );
 });
