@@ -1,7 +1,10 @@
 import { Router } from "express";
-import { validate } from "../middlewares/validate.middleware.js";
-import { loginSchema } from "../validators/login.validator.js";
-import { registerSchema } from "../validators/register.validator.js";
+
+// * Zod validation is in progress
+// import { validate } from "../middlewares/validate.middleware.js";
+// import { loginSchema } from "../validators/login.validator.js";
+// import { registerSchema } from "../validators/register.validator.js";
+
 import {
   forgotPassword,
   getProfile,
