@@ -25,7 +25,7 @@ router
   .route("/profile")
   .get(authMiddlware, getProfile)
   .post(authMiddlware, uploadProfileImage, getProfile);
-router.route("/logout").get(authMiddlware, logoutUser);
+router.route("/logout").post(authMiddlware, logoutUser);
 router.route("/forgot-password").post(forgotPassword);
 router.route("/reset-password").post(resetPassword);
 
