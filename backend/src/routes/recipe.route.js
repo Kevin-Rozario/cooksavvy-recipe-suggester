@@ -7,6 +7,7 @@ import {
   removeIngredientFromCart,
   searchRecipeByDiet,
   searchRecipeByIngredient,
+  updateCartItemQuantity,
 } from "../controllers/recipe.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 
