@@ -18,7 +18,7 @@ import {
   resetPassword,
   verifyUser,
 } from "../controllers/auth.controller.js";
-import { authMiddlware } from "../middlewares/auth.middleware.js";
+import { authMiddleware } from "../middlewares/auth.middleware.js";
 import { uploadProfileImage } from "../middlewares/multer.middleware.js";
 
 const router = Router();
@@ -29,17 +29,15 @@ router.route("/verify").post(verifyUser);
 router.route("/refresh-token").get(renewRefreshToken);
 router
   .route("/profile")
-  .get(authMiddlware, getProfile)
-  .post(authMiddlware, uploadProfileImage, getProfile);
-router.route("/logout").post(authMiddlware, logoutUser);
+  .get(authMiddleware, getProfile)
+  .post(authMiddleware, uploadProfileImage, getProfile);
+router.route("/logout").post(authMiddleware, logoutUser);
 router.route("/forgot-password").post(forgotPassword);
 router.route("/reset-password").post(resetPassword);
 router
-  .route("/favourites/add/:recipeId")
-  .post(authMiddlware, addRecipeToFavourites);
-router
-  .route("/favourites/rm/:recipeId")
-  .post(authMiddlware, removeRecipeFromFavourites);
-router.route("/favourites").post(authMiddlware, getFavouriteRecipes);
+  .route("/favourites/:recipeId")
+  .post(authMiddleware, addRecipeToFavourites)
+  .delete(authMiddleware, removeRecipeFromFavourites);
+router.route("/favourites").post(authMiddleware, getFavouriteRecipes);
 
 export default router;

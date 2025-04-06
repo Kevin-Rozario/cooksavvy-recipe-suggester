@@ -1,7 +1,7 @@
 import { ApiError } from "../utils/apiError.util.js";
 import jwt from "jsonwebtoken";
 
-const authMiddlware = async (req, _res, next) => {
+const authMiddleware = async (req, _res, next) => {
   // get tokens
   const { accessToken, refreshToken } = req.cookies;
 
@@ -24,4 +24,4 @@ const authMiddlware = async (req, _res, next) => {
   }
 };
 
-export { authMiddlware };
+export { authMiddleware };
