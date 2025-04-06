@@ -360,7 +360,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
 
 export const addRecipeToFavourites = asyncHandler(async (req, res) => {
   const { recipeId } = req.params;
-  const userId = req.user._id;
+  const userId = req.user.userId;
 
   if (recipeId && mongoose.Types.ObjectId.isValid(recipeId)) {
     const recipeExists = await Recipe.findById(recipeId);
@@ -384,8 +384,8 @@ export const addRecipeToFavourites = asyncHandler(async (req, res) => {
       .status(200)
       .json({ message: "Recipe added to favorites successfully" });
   } else {
-    const recipeData = req.body;
-    const userId = req.user._id;
+    const { recipeData } = req.body;
+    const userId = req.user.userId;
 
     if (!recipeData || !recipeData.title || !recipeData.ingredients) {
       throw new ApiError(400, "Invalid AI recipe data provided for favoriting");
@@ -466,7 +466,7 @@ export const addRecipeToFavourites = asyncHandler(async (req, res) => {
 
 export const removeRecipeFromFavourites = asyncHandler(async (req, res) => {
   const { recipeId } = req.params;
-  const userId = req.user._id;
+  const userId = req.user.userId;
 
   if (!mongoose.Types.ObjectId.isValid(recipeId)) {
     throw new ApiError(400, "Invalid recipe ID");
@@ -495,7 +495,7 @@ export const removeRecipeFromFavourites = asyncHandler(async (req, res) => {
 });
 
 export const getFavouriteRecipes = asyncHandler(async (req, res) => {
-  const userId = req.user._id;
+  const userId = req.user.userId;
 
   const user = await User.findById(userId)
     .populate("favouriteRecipes")
