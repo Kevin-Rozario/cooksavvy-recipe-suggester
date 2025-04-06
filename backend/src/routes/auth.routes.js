@@ -6,11 +6,14 @@ import { Router } from "express";
 // import { registerSchema } from "../validators/register.validator.js";
 
 import {
+  addRecipeToFavourites,
   forgotPassword,
+  getFavouriteRecipes,
   getProfile,
   loginUser,
   logoutUser,
   registerUser,
+  removeRecipeFromFavourites,
   renewRefreshToken,
   resetPassword,
   verifyUser,
@@ -31,5 +34,12 @@ router
 router.route("/logout").post(authMiddlware, logoutUser);
 router.route("/forgot-password").post(forgotPassword);
 router.route("/reset-password").post(resetPassword);
+router
+  .route("/favourites/add/:recipeId")
+  .post(authMiddlware, addRecipeToFavourites);
+router
+  .route("/favourites/rm/:recipeId")
+  .post(authMiddlware, removeRecipeFromFavourites);
+router.route("/favourites").post(authMiddlware, getFavouriteRecipes);
 
 export default router;

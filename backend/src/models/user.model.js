@@ -63,6 +63,19 @@ const userSchema = new mongoose.Schema(
       ],
       default: [],
     },
+    cart: {
+      type: [
+        {
+          ingredientName: String,
+          quantity: {
+            type: Number,
+            default: 1,
+            min: 1,
+          },
+        },
+      ],
+      default: [],
+    },
     refreshToken: {
       type: String,
       default: undefined,

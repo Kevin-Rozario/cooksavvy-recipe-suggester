@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { difficultLevelEnum, difficultLevelList } from "../utils/constants";
+import { difficultLevelEnum, difficultLevelList } from "../utils/constants.js";
 
 const recipeSchema = new mongoose.Schema(
   {
@@ -34,6 +34,21 @@ const recipeSchema = new mongoose.Schema(
       enum: difficultLevelList,
       default: difficultLevelEnum.EASY,
     },
+    ingredients: {
+      type: [
+        {
+          name: {
+            type: String,
+            trim: true,
+          },
+          quatity: {
+            type: String,
+            trim: true,
+          },
+        },
+      ],
+      default: [],
+    },
     nutritions: {
       type: Schema.Types.ObjectId,
       ref: "Nutrition",
@@ -53,8 +68,21 @@ const recipeSchema = new mongoose.Schema(
       ],
       required: true,
     },
+    tags: {
+      type: [
+        {
+          description: {
+            type: String,
+            lowercase: true,
+            trim: true,
+          },
+        },
+      ],
+      default: [],
+    },
   },
   { timestamps: true },
 );
 
-export const Recipe = mongoose.model("Recipe", recipeSchema);
+const Recipe = mongoose.model("Recipe", recipeSchema);
+export default Recipe;

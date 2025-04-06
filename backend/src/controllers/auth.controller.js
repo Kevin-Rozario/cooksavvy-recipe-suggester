@@ -2,12 +2,15 @@ import { ApiResponse } from "../utils/apiResponse.util.js";
 import { ApiError } from "../utils/apiError.util.js";
 import asyncHandler from "../utils/asyncHandler.util.js";
 import User from "../models/user.model.js";
+import Recipe from "../models/recipe.model.js";
 import {
   emailVerificationMailGenContent,
   passwordResetMailGenContent,
   sendEmail,
 } from "../utils/sendEmail.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
+import { Nutrition } from "../models/nutrition.model.js";
 
 export const loginUser = asyncHandler(async (req, res) => {
   const { identifier, password } = req.body;
@@ -353,4 +356,154 @@ export const resetPassword = asyncHandler(async (req, res) => {
         { NewPassword: password },
       ),
     );
+});
+
+export const addRecipeToFavourites = asyncHandler(async (req, res) => {
+  const { recipeId } = req.params;
+  const userId = req.user._id;
+
+  if (recipeId && mongoose.Types.ObjectId.isValid(recipeId)) {
+    const recipeExists = await Recipe.findById(recipeId);
+    if (!recipeExists) {
+      throw new ApiError(404, "Recipe not found");
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new ApiError(404, "User not found");
+    }
+
+    if (user.favouriteRecipes.includes(recipeId)) {
+      return res.status(200).json({ message: "Recipe already in favorites" });
+    }
+
+    user.favouriteRecipes.push(recipeId);
+    await user.save();
+
+    return res
+      .status(200)
+      .json({ message: "Recipe added to favorites successfully" });
+  } else {
+    const recipeData = req.body;
+    const userId = req.user._id;
+
+    if (!recipeData || !recipeData.title || !recipeData.ingredients) {
+      throw new ApiError(400, "Invalid AI recipe data provided for favoriting");
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new ApiError(404, "User not found");
+    }
+
+    const existingRecipe = await Recipe.findOne({
+      title: recipeData.title,
+    });
+
+    let recipeIdToFavorite;
+
+    if (existingRecipe) {
+      recipeIdToFavorite = existingRecipe._id;
+    } else {
+      const nutrition = await Nutrition.create({
+        energy: recipeData.nutritions.energy,
+        carbs: recipeData.nutritions.carbs,
+        sugars: recipeData.nutritions.sugars,
+        dietaryFiber: recipeData.nutritions.dietaryFiber,
+        proteins: recipeData.nutritions.proteins,
+        fats: recipeData.nutritions.fats,
+        saturatedFat: recipeData.nutritions.saturatedFat,
+        transFat: recipeData.nutritions.transFat,
+        unsaturatedFat: recipeData.nutritions.unsaturatedFat,
+        cholesterol: recipeData.nutritions.cholesterol,
+        sodium: recipeData.nutritions.sodium,
+        potassium: recipeData.nutritions.potassium,
+        calcium: recipeData.nutritions.calcium,
+        iron: recipeData.nutritions.iron,
+        servingSize: recipeData.nutritions.servingSize,
+        vitamins: recipeData.nutritions.vitamins.map((vit) => ({
+          vitaminName: vit.vitaminName,
+          vitaminQuantity: vit.vitaminQuantity,
+        })),
+      });
+
+      // create new recipe
+      const newRecipe = new Recipe({
+        recipeImage: recipeData.recipeImage,
+        recipeVideoUrl: recipeData.recipeVideoUrl,
+        title: recipeData.title,
+        description: recipeData.description,
+        ratings: recipeData.ratings,
+        mealType: recipeData.mealType,
+        cookTime: recipeData.cookTime,
+        difficultLevel: recipeData.difficultLevel,
+        ingredients: recipeData.ingredients.map((ing) => ({
+          name: ing.ingredientName,
+          quantity: ing.quantity,
+        })),
+        nutritions: nutrition._id,
+        steps: recipeData.steps.map((step) => ({
+          stepNumber: step.stepNumber,
+          stepContent: step.stepContent,
+        })),
+      });
+      await newRecipe.save();
+      recipeIdToFavorite = newRecipe._id;
+    }
+
+    if (!user.favouriteRecipes.includes(recipeIdToFavorite)) {
+      user.favouriteRecipes.push(recipeIdToFavorite);
+      await user.save();
+      return res.status(200).json({
+        message: "Recipe added to favorites successfully",
+        recipeId: recipeIdToFavorite,
+      });
+    } else {
+      return res.status(200).json({ message: "Recipe already in favorites" });
+    }
+  }
+});
+
+export const removeRecipeFromFavourites = asyncHandler(async (req, res) => {
+  const { recipeId } = req.params;
+  const userId = req.user._id;
+
+  if (!mongoose.Types.ObjectId.isValid(recipeId)) {
+    throw new ApiError(400, "Invalid recipe ID");
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  const initialFavoritesCount = user.favouriteRecipes.length;
+
+  user.favouriteRecipes = user.favouriteRecipes.filter(
+    (favId) => favId.toString() !== recipeId,
+  );
+
+  if (user.favouriteRecipes.length === initialFavoritesCount) {
+    return res.status(400).json({ message: "Recipe is not in your favorites" });
+  }
+
+  await user.save();
+
+  return res
+    .status(200)
+    .json({ message: "Recipe removed from favorites successfully" });
+});
+
+export const getFavouriteRecipes = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
+  const user = await User.findById(userId)
+    .populate("favouriteRecipes")
+    .populate("nutritions");
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  return res.status(200).json({ favorites: user.favouriteRecipes });
 });
