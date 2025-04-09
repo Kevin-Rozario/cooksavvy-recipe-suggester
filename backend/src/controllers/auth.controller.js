@@ -265,6 +265,87 @@ export const getProfile = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "User fetched succssfully!", foundUser));
 });
 
+export const updateProfile = asyncHandler(async (req, res) => {
+  // get data from request
+  const { userId } = req.user;
+  const { fullName, userName, email, dietPreferences, allergies } = req.body;
+
+  if (!userId) {
+    throw new ApiError(401, "Unauthorised request.");
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(404, "User not found!");
+  }
+
+  // check fullname
+  if (fullName) {
+    user.fullName = fullName.trim();
+  }
+
+  // check username
+  if (userName) {
+    const trimmedUsername = userName.trim().toLowerCase();
+    if (trimmedUsername !== user.userName) {
+      const existingUserWithUsername = await User.findOne({
+        userName: trimmedUsername,
+      });
+      if (existingUserWithUsername) {
+        throw new ApiError(409, "Username already exists!");
+      }
+      user.userName = trimmedUsername;
+    }
+  }
+
+  // check email
+  if (email) {
+    const trimmedEmail = email.trim().toLowerCase();
+    if (trimmedEmail !== user.email) {
+      const existingUserWithEmail = await User.findOne({ email: trimmedEmail });
+      if (existingUserWithEmail) {
+        throw new ApiError(409, "Email already exists!");
+      }
+      user.email = trimmedEmail;
+      user.isEmailVerified = false;
+      const options = {
+        email: user.email,
+        subject: "Cooksavvy Verification Email",
+        mailGenContent: emailVerificationMailGenContent({
+          userName: user.fullName,
+          verificationUrl: `${process.env.BASE_URL}/api/v1/users/verify?tkey=${token}`,
+        }),
+      };
+
+      const emailStatus = await sendEmail(options);
+      if (!emailStatus) {
+        console.error("Failed to send verification email", emailStatus);
+        throw new ApiError(500, "Failed to send verification email.");
+      }
+    }
+  }
+
+  // handling user preferences
+  if (dietPreferences && Array.isArray(dietPreferences)) {
+    user.dietPreferences = dietPreferences.map((pref) => pref.trim());
+  }
+  if (allergies && Array.isArray(allergies)) {
+    user.allergies = allergies.map((allergy) => allergy.trim());
+  }
+
+  await user.save();
+
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        message: "Profile updated successfully",
+      },
+      user, // Consider selecting specific fields here
+    ),
+  );
+});
+
 export const forgotPassword = asyncHandler(async (req, res) => {
   // get email from request
   const { email } = req.body;

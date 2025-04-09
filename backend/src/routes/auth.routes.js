@@ -16,6 +16,7 @@ import {
   removeRecipeFromFavourites,
   renewRefreshToken,
   resetPassword,
+  updateProfile,
   verifyUser,
 } from "../controllers/auth.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
@@ -25,12 +26,12 @@ const router = Router();
 
 router.route("/login").post(loginUser);
 router.route("/register").post(registerUser);
-router.route("/verify").post(verifyUser);
+router.route("/verify").get(verifyUser);
 router.route("/refresh-token").get(renewRefreshToken);
 router
   .route("/profile")
   .get(authMiddleware, getProfile)
-  .post(authMiddleware, uploadProfileImage, getProfile);
+  .patch(authMiddleware, uploadProfileImage, updateProfile);
 router.route("/logout").post(authMiddleware, logoutUser);
 router.route("/forgot-password").post(forgotPassword);
 router.route("/reset-password").post(resetPassword);
@@ -38,6 +39,6 @@ router
   .route("/favourites/:recipeId")
   .post(authMiddleware, addRecipeToFavourites)
   .delete(authMiddleware, removeRecipeFromFavourites);
-router.route("/favourites").post(authMiddleware, getFavouriteRecipes);
+router.route("/favourites").get(authMiddleware, getFavouriteRecipes);
 
 export default router;
