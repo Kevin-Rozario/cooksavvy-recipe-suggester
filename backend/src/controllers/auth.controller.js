@@ -202,14 +202,12 @@ export const resendVerificationEmail = asyncHandler(async (req, res) => {
     );
   }
 
-  res
-    .status(200)
-    .json(
-      new ApiResponse(200, {
-        message:
-          "Verification email resent successfully. Please check your inbox.",
-      }),
-    );
+  res.status(200).json(
+    new ApiResponse(200, {
+      message:
+        "Verification email resent successfully. Please check your inbox.",
+    }),
+  );
 });
 
 export const logoutUser = asyncHandler(async (req, res) => {

@@ -27,7 +27,7 @@ const router = Router();
 router.route("/login").post(loginUser);
 router.route("/register").post(registerUser);
 router.route("/verify").get(verifyUser);
-router.route("/resend-verification").post(resendVerificationEmail); 
+router.route("/resend-verification").post(resendVerificationEmail);
 router.route("/refresh-token").get(renewRefreshToken);
 router
   .route("/profile")
