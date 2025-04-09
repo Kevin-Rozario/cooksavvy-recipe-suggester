@@ -155,6 +155,63 @@ export const verifyUser = asyncHandler(async (req, res) => {
     );
 });
 
+export const resendVerificationEmail = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    throw new ApiError(400, "Email is required to resend verification link.");
+  }
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new ApiError(404, "User with this email not found.");
+  }
+
+  if (user.isEmailVerified) {
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, { message: "This email is already verified." }),
+      );
+  }
+
+  // Generate a new verification token and expiry
+  const { token, tokenExpiry } = user.generateTemporaryToken();
+  user.emailToken = token;
+  user.emailTokenExpiry = tokenExpiry;
+  await user.save();
+
+  // Send the verification email
+  const options = {
+    email: user.email,
+    subject: "Resend: Cooksavvy Verification Email",
+    mailGenContent: emailVerificationMailGenContent({
+      userName: user.fullName,
+      verificationUrl: `${process.env.BASE_URL}/api/v1/auth/verify?tkey=${token}`,
+    }),
+  };
+
+  const emailStatus = await sendEmail(options);
+  if (!emailStatus) {
+    console.error("Failed to resend verification email", emailStatus);
+    return res.status(500).json(
+      new ApiResponse(500, {
+        message: "Failed to resend verification email. Please try again later.",
+      }),
+    );
+  }
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, {
+        message:
+          "Verification email resent successfully. Please check your inbox.",
+      }),
+    );
+});
+
 export const logoutUser = asyncHandler(async (req, res) => {
   // get user id
   const userId = req.user?.userId;
