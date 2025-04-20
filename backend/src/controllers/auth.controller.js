@@ -11,6 +11,8 @@ import {
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { Nutrition } from "../models/nutrition.model.js";
+import uploadImage from "../utils/uploadImage.js";
+import fs from "fs";
 
 export const loginUser = asyncHandler(async (req, res) => {
   const { identifier, password } = req.body;
@@ -399,6 +401,58 @@ export const updateProfile = asyncHandler(async (req, res) => {
       user, // Consider selecting specific fields here
     ),
   );
+});
+
+export const uploadUserAvatar = asyncHandler(async (req, res) => {
+  const userId = req.user?.userId;
+  if (!userId) {
+    throw new ApiError(401, "Unauthorised request");
+  }
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(404, "User not found!");
+  }
+  if (!req.file) {
+    throw new ApiError(400, "No file uploaded");
+  }
+
+  const tempFilePath = req.file.path;
+  const fileName = req.file.filename;
+
+  try {
+    const imagekitResponse = await uploadImage(tempFilePath, fileName);
+    if (!imagekitResponse || !imagekitResponse.url) {
+      console.error("ImageKit upload failed:", imagekitResponse);
+      user.avatar = { url: "", localPath: tempFilePath }; // Set localPath on failure
+      await user.save();
+      throw new ApiError(500, "Failed to upload image to ImageKit");
+    }
+
+    // Update user avatar URL and clear localPath on success
+    user.avatar = {
+      url: imagekitResponse.url,
+      localPath: "",
+    };
+    await user.save();
+
+    // Remove the local file after successfully uploading to ImageKit
+    fs.unlink(tempFilePath, (err) => {
+      if (err) {
+        console.error("Error deleting local file:", err);
+      } else {
+        console.log("Local file deleted successfully");
+      }
+    });
+
+    res.status(200).json(
+      new ApiResponse(200, "Profile image uploaded successfully!", {
+        profileImage: user.avatar.url,
+      }),
+    );
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    throw new ApiError(500, "Failed to upload image");
+  }
 });
 
 export const forgotPassword = asyncHandler(async (req, res) => {

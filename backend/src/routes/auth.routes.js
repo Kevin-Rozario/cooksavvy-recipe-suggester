@@ -17,7 +17,9 @@ import {
   renewRefreshToken,
   resetPassword,
   updateProfile,
+  uploadUserAvatar,
   verifyUser,
+  resendVerificationEmail,
 } from "../controllers/auth.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 import { uploadProfileImage } from "../middlewares/multer.middleware.js";
@@ -32,7 +34,8 @@ router.route("/refresh-token").get(renewRefreshToken);
 router
   .route("/profile")
   .get(authMiddleware, getProfile)
-  .patch(authMiddleware, uploadProfileImage, updateProfile);
+  .patch(authMiddleware, uploadProfileImage, uploadUserAvatar)
+  .patch(authMiddleware, updateProfile);
 router.route("/logout").post(authMiddleware, logoutUser);
 router.route("/forgot-password").post(forgotPassword);
 router.route("/reset-password").post(resetPassword);
