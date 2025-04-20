@@ -1,4 +1,8 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import {
+  GoogleGenAI,
+  createUserContent,
+  createPartFromUri,
+} from "@google/genai";
 import { config } from "dotenv";
 import { ApiError } from "./apiError.util.js";
 
@@ -183,5 +187,27 @@ export const aiFetchRecipesByDiet = async (diet) => {
   } catch (error) {
     console.error("Error fetching recipes by diet:", error);
     throw new ApiError(500, "Error fetching recipes by diet");
+  }
+};
+
+export const aiFetchRecipesByImage = async (imagePath) => {
+  try {
+    const myfile = await gemAi.files.upload({
+      file: "/Users/kevinrozario/Desktop/Github/cooksavvy-backend/backend/public/uploads/veggies.jpg",
+      config: { mimeType: "image/jpeg" },
+    });
+
+    const response = await gemAi.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: createUserContent([
+        createPartFromUri(myfile.uri, myfile.mimeType),
+        "Explain the image and suggest some recipes based on the ingredients or items you see.",
+      ]),
+    });
+    console.log(response.text);
+    return parseApiResponse(response)
+  } catch (error) {
+    console.error("Error fetching recipes by image:", error);
+    return null;
   }
 };

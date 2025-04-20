@@ -417,7 +417,8 @@ export const uploadUserAvatar = asyncHandler(async (req, res) => {
   }
 
   const tempFilePath = req.file.path;
-  // console.log("Temp file path:", tempFilePath);
+  console.log("Temp file path:", tempFilePath);
+  console.log("File details:", req.file);
   const originalFilename = req.file.originalname;
   const timestamp = Date.now();
   const uniqueFileName = `avatar_${userId}_${timestamp}_${originalFilename}`;
