@@ -205,7 +205,7 @@ export const aiFetchRecipesByImage = async (imagePath) => {
       ]),
     });
     console.log(response.text);
-    return parseApiResponse(response)
+    return parseApiResponse(response);
   } catch (error) {
     console.error("Error fetching recipes by image:", error);
     return null;
