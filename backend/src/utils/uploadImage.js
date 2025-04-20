@@ -1,4 +1,5 @@
 import imagekit from "../config/imagekit.js";
+import { ApiError } from "./apiError.util.js";
 
 const uploadImage = async (filePath, fileName) => {
   try {
@@ -12,7 +13,7 @@ const uploadImage = async (filePath, fileName) => {
     return response;
   } catch (error) {
     console.error("Error uploading image to ImageKit:", error);
-    throw error;
+    throw new ApiError(500, "Error uploading image to ImageKit", error.message);
   }
 };
 
