@@ -417,10 +417,12 @@ export const uploadUserAvatar = asyncHandler(async (req, res) => {
   }
 
   const tempFilePath = req.file.path;
-  const fileName = req.file.filename;
+  const originalFilename = req.file.originalname;
+  const timestamp = Date.now();
+  const uniqueFileName = `avatar_${userId}_${timestamp}_${originalFilename}`;
 
   try {
-    const imagekitResponse = await uploadImage(tempFilePath, fileName);
+    const imagekitResponse = await uploadImage(tempFilePath, uniqueFileName);
     if (!imagekitResponse || !imagekitResponse.url) {
       console.error("ImageKit upload failed:", imagekitResponse);
       user.avatar = { url: "", localPath: tempFilePath }; // Set localPath on failure

@@ -5,7 +5,7 @@ const uploadImage = async (filePath, fileName) => {
     const response = await imagekit.upload({
       file: filePath, // required
       fileName: fileName, // required
-      folder: "/avatars", // optional
+      folder: "avatars", // optional
       isPrivateFile: false, // optional
       tags: ["avatar"], // optional
     });
