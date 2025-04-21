@@ -18,7 +18,9 @@ const router = Router();
 router.route("/").get(fetchRecipes);
 router.route("/:ingredient").get(searchRecipeByIngredient);
 router.route("/diet/:diet").get(searchRecipeByDiet);
-router.route("/upload-ingredient").post(authMiddleware, uploadGeneralImage, searchRecipeByImage);
+router
+  .route("/upload-ingredient")
+  .post(authMiddleware, uploadGeneralImage, searchRecipeByImage);
 router.route("/cart/add").post(authMiddleware, addIngredientToCart);
 router
   .route("/cart/remove/:ingredientName")

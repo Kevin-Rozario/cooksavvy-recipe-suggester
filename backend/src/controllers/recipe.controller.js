@@ -94,11 +94,7 @@ export const searchRecipeByImage = asyncHandler(async (req, res) => {
   try {
     const allRecipes = await aiFetchRecipesByImage(imageUrl);
     if (!allRecipes || allRecipes.length === 0) {
-      throw new ApiError(
-        404,
-        "No recipes found for the given image.",
-        {},
-      );
+      throw new ApiError(404, "No recipes found for the given image.", {});
     }
     res
       .status(200)
@@ -111,11 +107,7 @@ export const searchRecipeByImage = asyncHandler(async (req, res) => {
       );
   } catch (error) {
     console.error("Error fetching recipes by image:", error);
-    throw new ApiError(
-      500,
-      "Failed to fetch recipes for the given image.",
-      {},
-    );
+    throw new ApiError(500, "Failed to fetch recipes for the given image.", {});
   }
 });
 
