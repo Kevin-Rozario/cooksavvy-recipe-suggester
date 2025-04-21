@@ -138,7 +138,7 @@ const parseApiResponse = (response) => {
   }
 
   const rawResponse = response.candidates[0].content.parts[0].text;
-  // console.log("Raw API Response:", rawResponse);
+  console.log("Raw API Response:", rawResponse);
 
   try {
     return JSON.parse(rawResponse);
@@ -166,7 +166,7 @@ export const aiFetchRecipesByIngredient = async (ingredient) => {
   try {
     const response = await gemAi.models.generateContent({
       model: "gemini-2.0-flash",
-      contents: `Provide 1 popular healthy recipes that include "${ingredient}" as an ingredient, with all recipe, ingredient, and nutrition details in JSON format.`,
+      contents: `Provide 1 popular healthy recipes that include "${ingredient}" as an ingredient or ingredients, with all recipe, ingredient, and nutrition details in JSON format.`,
       config: structuredOutputTemplate,
     });
     return parseApiResponse(response);
@@ -190,10 +190,31 @@ export const aiFetchRecipesByDiet = async (diet) => {
   }
 };
 
+export const aiFetchRecipesByIngredients = async (ingredients) => {
+  if (!Array.isArray(ingredients) || ingredients.length === 0) {
+    throw new ApiError(400, "Ingredients array cannot be empty.");
+  }
+
+  try {
+    const ingredientsList = ingredients.map((ing) => `"${ing}"`).join(", ");
+    const prompt = `Provide 1 popular healthy recipe that includes all of the following ingredients: ${ingredientsList}, with all recipe, ingredient, and nutrition details in JSON format.`;
+
+    const response = await gemAi.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: prompt,
+      config: structuredOutputTemplate,
+    });
+    return parseApiResponse(response);
+  } catch (error) {
+    console.error("Error fetching recipes by ingredients:", error);
+    throw new ApiError(500, "Error fetching recipes by ingredients");
+  }
+};
+
 export const aiFetchRecipesByImage = async (imagePath) => {
   try {
     const myfile = await gemAi.files.upload({
-      file: "/Users/kevinrozario/Desktop/Github/cooksavvy-backend/backend/public/uploads/veggies.jpg",
+      file: imagePath,
       config: { mimeType: "image/jpeg" },
     });
 
@@ -201,13 +222,37 @@ export const aiFetchRecipesByImage = async (imagePath) => {
       model: "gemini-2.0-flash",
       contents: createUserContent([
         createPartFromUri(myfile.uri, myfile.mimeType),
-        "Explain the image and suggest some recipes based on the ingredients or items you see.",
+        "Examine the image and list every individual food ingredient that you can clearly distinguish. Present these ingredients as a JSON array of strings.",
       ]),
+      config: {
+        responseMimeType: "application/json",
+      },
     });
-    console.log(response.text);
-    return parseApiResponse(response);
+
+    try {
+      const parsedResponse = parseApiResponse(response);
+      if (Array.isArray(parsedResponse) && parsedResponse.length > 0) {
+        const ingredientsArray = parsedResponse;
+        return aiFetchRecipesByIngredients(ingredientsArray);
+      } else {
+        throw new ApiError(
+          400,
+          "Could not extract ingredients array from image analysis.",
+        );
+      }
+    } catch (parseError) {
+      console.error(
+        "Error parsing ingredients from image analysis:",
+        parseError,
+      );
+      throw new ApiError(500, "Error processing ingredients from image.");
+    }
   } catch (error) {
     console.error("Error fetching recipes by image:", error);
-    return null;
+    if (error instanceof ApiError) {
+      throw error;
+    } else {
+      throw new ApiError(500, "Error fetching recipes by image");
+    }
   }
 };

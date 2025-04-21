@@ -5,7 +5,7 @@
         "markdown": false,
         "scminput": false,
         "rust": false,
-        "javascript": false,
+        "javascript": true,
         "json": true,
         "ignore": true,
         "dotenv": true
