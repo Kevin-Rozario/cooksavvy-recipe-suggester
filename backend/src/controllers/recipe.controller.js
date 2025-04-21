@@ -6,6 +6,7 @@ import {
   aiFetchRecipesByIngredient,
   aiFetchRecipesByIngredients,
   aiFetchRecipesByList,
+  aiFetchRecipesByLocation,
 } from "../utils/gemAi.util.js";
 import asyncHandler from "../utils/asyncHandler.util.js";
 import { ApiError } from "../utils/apiError.util.js";
@@ -166,6 +167,35 @@ export const searchRecipeByManualList = asyncHandler(async (req, res) => {
     throw new ApiError(
       500,
       "Failed to fetch recipes for the given ingredients.",
+      {},
+    );
+  }
+});
+
+export const searchRecipeByLocation = asyncHandler(async (req, res) => {
+  const { location } = req.params;
+  if (!location || typeof location !== "string" || location.trim() === "") {
+    throw new ApiError(400, "Location not found!", {});
+  }
+  try {
+    const allRecipes = await aiFetchRecipesByLocation(location.toLowerCase());
+    if (!allRecipes || allRecipes.length === 0) {
+      throw new ApiError(404, "No recipes found for the given location.", {});
+    }
+    res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { message: "Recipes fetched successfully!" },
+          allRecipes,
+        ),
+      );
+  } catch (error) {
+    console.error(`Error fetching recipes by location '${location}':`, error);
+    throw new ApiError(
+      500,
+      "Failed to fetch recipes for the given location.",
       {},
     );
   }

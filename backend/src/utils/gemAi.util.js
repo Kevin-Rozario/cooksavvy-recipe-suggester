@@ -303,3 +303,17 @@ export const aiFetchRecipesByList = async (imagePath) => {
     }
   }
 };
+
+export const aiFetchRecipesByLocation = async (location) => {
+  try {
+    const response = await gemAi.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: `Provide 1 popular healthy recipes that are commonly made in "${location}", with all recipe, ingredient, and nutrition details in JSON format.`,
+      config: structuredOutputTemplate,
+    });
+    return parseApiResponse(response);
+  } catch (error) {
+    console.error("Error fetching recipes by location:", error);
+    throw new ApiError(500, "Error fetching recipes by location");
+  }
+};
