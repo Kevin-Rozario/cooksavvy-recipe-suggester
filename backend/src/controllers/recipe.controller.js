@@ -4,6 +4,7 @@ import {
   aiFetchRecipesByDiet,
   aiFetchRecipesByImage,
   aiFetchRecipesByIngredient,
+  aiFetchRecipesByIngredients,
   aiFetchRecipesByList,
 } from "../utils/gemAi.util.js";
 import asyncHandler from "../utils/asyncHandler.util.js";
@@ -134,6 +135,39 @@ export const searchRecipeByList = asyncHandler(async (req, res) => {
   } catch (error) {
     console.error("Error fetching recipes by image:", error);
     throw new ApiError(500, "Failed to fetch recipes for the given image.", {});
+  }
+});
+
+export const searchRecipeByManualList = asyncHandler(async (req, res) => {
+  const { ingredients } = req.body;
+  if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
+    throw new ApiError(400, "Ingredients not found!", {});
+  }
+  try {
+    const allRecipes = await aiFetchRecipesByIngredients(ingredients);
+    if (!allRecipes || allRecipes.length === 0) {
+      throw new ApiError(
+        404,
+        "No recipes found for the given ingredients.",
+        {},
+      );
+    }
+    res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { message: "Recipes fetched successfully!" },
+          allRecipes,
+        ),
+      );
+  } catch (error) {
+    console.error("Error fetching recipes by ingredients:", error);
+    throw new ApiError(
+      500,
+      "Failed to fetch recipes for the given ingredients.",
+      {},
+    );
   }
 });
 

@@ -138,7 +138,7 @@ const parseApiResponse = (response) => {
   }
 
   const rawResponse = response.candidates[0].content.parts[0].text;
-  console.log("Raw API Response:", rawResponse);
+  // console.log("Raw API Response:", rawResponse);
 
   try {
     return JSON.parse(rawResponse);
