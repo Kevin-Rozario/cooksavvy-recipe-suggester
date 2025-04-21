@@ -256,3 +256,50 @@ export const aiFetchRecipesByImage = async (imagePath) => {
     }
   }
 };
+
+export const aiFetchRecipesByList = async (imagePath) => {
+  try {
+    const myfile = await gemAi.files.upload({
+      file: imagePath,
+      config: { mimeType: "image/jpeg" },
+    });
+
+    const response = await gemAi.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: createUserContent([
+        createPartFromUri(myfile.uri, myfile.mimeType),
+        "Examine the image and list every individual food ingredient that you can clearly distinguish. Present these ingredients as a JSON array of strings.",
+      ]),
+      config: {
+        responseMimeType: "application/json",
+      },
+    });
+
+    try {
+      const parsedResponse = parseApiResponse(response);
+      if (Array.isArray(parsedResponse) && parsedResponse.length > 0) {
+        const ingredientsArray = parsedResponse;
+        console.log("Parsed ingredients array:", ingredientsArray);
+        return aiFetchRecipesByIngredients(ingredientsArray);
+      } else {
+        throw new ApiError(
+          400,
+          "Could not extract ingredients array from image analysis.",
+        );
+      }
+    } catch (parseError) {
+      console.error(
+        "Error parsing ingredients from image analysis:",
+        parseError,
+      );
+      throw new ApiError(500, "Error processing ingredients from image.");
+    }
+  } catch (error) {
+    console.error("Error fetching recipes by image:", error);
+    if (error instanceof ApiError) {
+      throw error;
+    } else {
+      throw new ApiError(500, "Error fetching recipes by image");
+    }
+  }
+};

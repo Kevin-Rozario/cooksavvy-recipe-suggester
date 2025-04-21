@@ -8,6 +8,7 @@ import {
   searchRecipeByDiet,
   searchRecipeByImage,
   searchRecipeByIngredient,
+  searchRecipeByList,
   updateCartItemQuantity,
 } from "../controllers/recipe.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
@@ -19,8 +20,11 @@ router.route("/").get(fetchRecipes);
 router.route("/:ingredient").get(searchRecipeByIngredient);
 router.route("/diet/:diet").get(searchRecipeByDiet);
 router
-  .route("/upload-ingredients")
+  .route("/upload-ingredients-image")
   .post(authMiddleware, uploadGeneralImage, searchRecipeByImage);
+router
+  .route("/upload-ingredients-list")
+  .post(authMiddleware, uploadGeneralImage, searchRecipeByList);
 router.route("/cart/add").post(authMiddleware, addIngredientToCart);
 router
   .route("/cart/remove/:ingredientName")
