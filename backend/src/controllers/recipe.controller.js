@@ -26,7 +26,7 @@ export const fetchRecipes = async (_req, res) => {
       );
   } catch (error) {
     console.error("Error fetching all recipes:", error);
-    throw new ApiError(500, { message: "Failed to fetch recipes." }, {});
+    throw new ApiError(500, "Failed to fetch recipes.", {});
   }
 };
 
@@ -37,7 +37,7 @@ export const searchRecipeByIngredient = asyncHandler(async (req, res) => {
     typeof ingredient !== "string" ||
     ingredient.trim() === ""
   ) {
-    throw new ApiError(400, { message: "Ingredient not found!" }, {});
+    throw new ApiError(400, "Ingredient not found!", {});
   }
   try {
     const allRecipes = await aiFetchRecipesByIngredient(ingredient);
@@ -57,7 +57,7 @@ export const searchRecipeByIngredient = asyncHandler(async (req, res) => {
     );
     throw new ApiError(
       500,
-      { message: "Failed to fetch recipes for the given ingredient." },
+      "Failed to fetch recipes for the given ingredient.",
       {},
     );
   }
